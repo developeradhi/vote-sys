@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 450px; margin: 40px auto;">
+    <div class="official-box">
+        <div class="box-header">Authorized Personnel Only</div>
+        <p style="font-size: 0.9rem; color: #4b5563; margin-bottom: 20px; line-height:1.5;">
+            <strong>Warning:</strong> This system is for the exclusive use of authorized Election Commission officers. Unauthorized access is strictly prohibited and punishable by law. All activities are logged.
+        </p>
+        <form method="POST">
+            <label><strong>Officer ID / Username</strong></label>
+            <input type="text" name="username" required>
+            <label><strong>Secure Password</strong></label>
+            <input type="password" name="password" required>
+            <button type="submit" style="width: 100%; margin-top: 10px;">Authenticate & Enter Dashboard</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

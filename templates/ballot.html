@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="official-box" style="max-width: 800px; margin: 0 auto; padding: 40px; border: 2px solid #13294b;">
+    <div style="text-align: center; border-bottom: 2px solid #13294b; padding-bottom: 20px; margin-bottom: 30px;">
+        <h1 style="font-family: 'Playfair Display', serif; margin: 0; color: #13294b; text-transform: uppercase;">Form of Ballot Paper</h1>
+        <p style="color: #4b5563; font-size: 1.2rem; margin-top: 10px; font-weight:bold;">{{ title }}</p>
+        <p style="font-size: 1rem;"><strong>Instructions:</strong> {{ desc }}</p>
+    </div>
+    
+    <form method="POST">
+        <table style="font-size: 1.1rem;">
+            <tr>
+                <th style="width: 15%; text-align:center;">Select</th>
+                <th style="width: 45%;">Name of Candidate</th>
+                <th style="width: 40%;">Party Affiliation</th>
+            </tr>
+            {% for cand in candidates %}
+            <tr>
+                <td style="text-align:center;">
+                    <input type="{% if rule == 'Single Choice' %}radio{% else %}checkbox{% endif %}" name="candidate_id" value="{{ cand.id }}" style="transform: scale(2); margin: 0;" required>
+                </td>
+                <td><strong style="font-size:1.2rem;">{{ cand.name }}</strong><br><span style="font-size:0.9rem; color:#666;">{{ cand.bio }}</span></td>
+                <td><strong>{{ cand.party }}</strong></td>
+            </tr>
+            {% endfor %}
+        </table>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <button type="submit" style="background: #15803d; font-size: 1.3rem; padding: 20px 50px;">Cast Vote Securely</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 500px; margin: 40px auto;">
+    <div class="official-box" style="border-top: 4px solid #13294b;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div class="box-header" style="border:none; margin-bottom:5px; padding:0;">E-Voting Portal</div>
+            <div style="font-size:0.95rem; color:#666; font-weight:bold;">Identity Verification Required</div>
+        </div>
+        <form method="POST">
+            <label><strong>Registered Email Address (EPIC Alternate)</strong></label>
+            <input type="email" name="email" placeholder="Enter official registered email" required>
+            <label><strong>Voter Authorization PIN</strong></label>
+            <input type="password" name="pin" placeholder="Enter 6-character secure PIN" required>
+            
+            <div style="background: #fefce8; border: 1px solid #fef08a; padding: 12px; font-size: 0.85rem; margin: 20px 0; color: #854d0e; line-height: 1.5;">
+                <strong>Declaration:</strong> By clicking "Proceed", I declare that I am an eligible voter and I have not cast a vote in this election previously. I understand my vote is final.
+            </div>
+            
+            <button type="submit" style="width: 100%; background: #15803d; font-size:1rem; padding: 15px;">Proceed to Ballot Paper</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

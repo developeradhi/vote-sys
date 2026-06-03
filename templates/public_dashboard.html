@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="text-align: center; margin: 30px 0;">
+    <h1 style="font-family: 'Playfair Display', serif; color: #13294b; font-size: 2.5rem; text-transform: uppercase;">Election Commission of the Republic</h1>
+    <p style="font-size: 1.1rem; color: #4b5563;">Official E-Voting Information Portal. Ensuring Free, Fair, and Transparent Elections.</p>
+</div>
+
+<div class="official-box" style="text-align: center; border-top: 4px solid {% if status == 'Active' %}#15803d{% elif status == 'Closed' %}#b91c1c{% else %}#d97706{% endif %};">
+    <h2 style="font-size: 1rem; color: #6b7280; text-transform: uppercase;">Current Election Status</h2>
+    <div style="font-size: 2.5rem; font-weight: bold; color: {% if status == 'Active' %}#15803d{% elif status == 'Closed' %}#b91c1c{% else %}#d97706{% endif %}; margin: 10px 0;">
+        {{ status }}
+    </div>
+    {% if status == 'Active' %}
+        <p style="color: #15803d; font-size: 1.1rem; font-weight: bold;">Polling is currently open. Eligible voters may cast their ballots now.</p>
+        <a href="/voter/login" style="display: inline-block; background: #15803d; color: white; padding: 15px 40px; text-decoration: none; font-size: 1.2rem; font-weight: bold; border-radius: 2px; margin-top: 15px; text-transform: uppercase;">Proceed to Secure Voting Portal</a>
+    {% elif status == 'Draft' %}
+        <p style="color: #d97706; font-size: 1.1rem;">The election is currently being organized. Polling has not started.</p>
+    {% elif status == 'Closed' %}
+        <p style="color: #b91c1c; font-size: 1.1rem; font-weight: bold;">Polling has officially concluded.</p>
+    {% endif %}
+</div>
+
+<div style="display: flex; gap: 20px;">
+    <div class="official-box" style="flex: 2;">
+        <div class="box-header">How the E-Voting System Works</div>
+        <div style="padding-left: 10px; line-height: 1.8;">
+            <p style="font-size: 1.05rem; color: #374151;">
+                <strong>Step 1: Verification</strong><br>
+                Ensure your name is registered on the Electoral Roll. You will receive an official notification containing your Secure Authorization PIN.
+            </p>
+            <p style="font-size: 1.05rem; color: #374151;">
+                <strong>Step 2: Authentication</strong><br>
+                Navigate to the Secure Voting Portal. Enter your Registered Email Address and your 6-character Authorization PIN to verify your identity.
+            </p>
+            <p style="font-size: 1.05rem; color: #374151;">
+                <strong>Step 3: Casting the Ballot</strong><br>
+                Review the list of officially registered candidates on the digital ballot paper. Select your preferred candidate and click "Cast Vote Securely".
+            </p>
+            <p style="font-size: 1.05rem; color: #374151;">
+                <strong>Step 4: Cryptographic Sealing</strong><br>
+                Once cast, your vote is cryptographically separated from your identity. The system permanently records your vote in the digital ballot box while ensuring absolute anonymity. Double voting is technically impossible.
+            </p>
+        </div>
+    </div>
+
+    <div class="official-box" style="flex: 1; border-left: 4px solid #13294b;">
+        <div class="box-header">General Guidelines</div>
+        <ul style="color: #4b5563; font-size: 0.95rem; line-height: 1.6; padding-left: 20px;">
+            <li style="margin-bottom: 10px;">Voting is a fundamental democratic right and a civic duty.</li>
+            <li style="margin-bottom: 10px;">Do not share your Authorization PIN with anyone. The Election Commission will never ask for your PIN.</li>
+            <li style="margin-bottom: 10px;">Ensure you have a stable internet connection before entering the polling booth.</li>
+            <li style="margin-bottom: 10px;">Impersonation or attempt to vote multiple times is a federal offense punishable by strict imprisonment.</li>
+        </ul>
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/admin/login" style="color: #6b7280; font-size: 0.85rem; text-decoration: underline;">Authorized Officer Portal</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

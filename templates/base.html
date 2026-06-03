@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Election Commission Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@600;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            border-top: 5px solid #ff9933;
+        }
+        
+        .top-bar {
+            background-color: #13294b;
+            color: white;
+            padding: 6px 20px;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 15px;
+            font-weight: 500;
+        }
+        .top-bar a:hover { text-decoration: underline; }
+        
+        .masthead {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            border-bottom: 2px solid #13294b;
+            background: #ffffff;
+        }
+        
+        .emblem {
+            font-size: 4rem;
+            margin-right: 20px;
+            color: #13294b;
+        }
+        
+        .commission-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #13294b;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .commission-subtitle {
+            font-size: 0.95rem;
+            color: #555555;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+        
+        .marquee-container {
+            background: #fdf6e3;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 5px 0;
+            color: #d97706;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+        }
+        .marquee-label {
+            background: #d97706;
+            color: white;
+            padding: 0 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .official-box {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .official-box:hover {
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        }
+        
+        .box-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: #13294b;
+            border-bottom: 2px solid #13294b;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        input[type="text"], input[type="password"], input[type="email"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px 0;
+            border: 1px solid #9ca3af;
+            border-radius: 2px;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+            background: #f9fafb;
+        }
+        
+        button {
+            background: #13294b;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(19, 41, 75, 0.2);
+        }
+        
+        button:hover { background: #0f223d; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(19, 41, 75, 0.3); }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        th {
+            background-color: #f3f4f6;
+            color: #13294b;
+            font-weight: 600;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+        .alert-danger { color: #b91c1c; background-color: #fef2f2; border-color: #fecaca; }
+        .alert-success { color: #15803d; background-color: #f0fdf4; border-color: #bbf7d0; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div>BIET Government</div>
+        <div>
+            {% if session.get('admin_logged_in') %}
+                <span>Officer Session Active</span>
+                <a href="/admin/logout">Secure Logout</a>
+            {% elif session.get('voter_email') %}
+                <span>Elector: {{ session.get('voter_name') }}</span>
+                <a href="/voter/login">Abort Session</a>
+            {% else %}
+                <a href="/voter/login">Citizen E-Voting</a>
+                <a href="/admin/login">Officer Access</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="masthead">
+        <div class="emblem">🏛️</div>
+        <div>
+            <div class="commission-title">Election Commission</div>
+            <div class="commission-subtitle">Autonomous Constitutional Authority of BIET</div>
+        </div>
+    </div>
+    
+    <div class="marquee-container">
+        <div class="marquee-label">LATEST NOTIFICATIONS</div>
+        <marquee style="padding: 5px 15px;" scrollamount="4">
+            ⚠️ Attention Citizens: Voter registration is strictly monitored. • The polling portal is secured with end-to-end cryptography. • Fraudulent voting or impersonation is a federal offense. • For assistance, contact the Chief Electoral Officer.
+        </marquee>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}"><b>NOTICE:</b> {{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

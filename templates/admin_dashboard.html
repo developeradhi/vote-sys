@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="font-family: 'Playfair Display', serif; color: #13294b; border-bottom: 2px solid #13294b; padding-bottom: 10px;">Control Room Dashboard</h2>
+
+<div style="display: flex; gap: 20px; margin-bottom: 25px;">
+    <div class="official-box" style="flex: 1; margin: 0; text-align: center; padding: 20px;">
+        <div style="font-size: 0.85rem; font-weight: bold; color: #6b7280; text-transform: uppercase;">Election Status</div>
+        <div style="font-size: 2rem; font-weight: bold; color: {% if status == 'Active' %}#15803d{% elif status == 'Closed' %}#b91c1c{% else %}#13294b{% endif %};">{{ status }}</div>
+    </div>
+    <div class="official-box" style="flex: 1; margin: 0; text-align: center; padding: 20px;">
+        <div style="font-size: 0.85rem; font-weight: bold; color: #6b7280; text-transform: uppercase;">Registered Electors</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #13294b;">{{ total }}</div>
+    </div>
+    <div class="official-box" style="flex: 1; margin: 0; text-align: center; padding: 20px;">
+        <div style="font-size: 0.85rem; font-weight: bold; color: #6b7280; text-transform: uppercase;">Total Votes Polled</div>
+        <div style="font-size: 2rem; font-weight: bold; color: #13294b;">{{ turnout }} <span style="font-size:1.2rem; color:#6b7280;">({{ pct }}%)</span></div>
+    </div>
+</div>
+
+<div style="display: flex; gap: 20px;">
+    <div style="flex: 2;">
+        
+        <div class="official-box" style="border: 2px solid #13294b;">
+            <div class="box-header">Live Election Results & Tally</div>
+            <p style="font-size:0.95rem; color:#4b5563;">Real-time vote counting and candidate distribution graph.</p>
+            
+            {% if tally|length == 0 or turnout == 0 %}
+                <div style="padding: 30px; text-align: center; background: #f3f4f6; color: #6b7280; font-size:1.1rem; border:1px dashed #ccc;">
+                    No votes have been cast yet.
+                </div>
+            {% else %}
+                <div style="height: 350px; width: 100%;">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="official-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>List of Contesting Candidates</span>
+                {% if status == 'Draft' and candidates|length > 0 %}
+                <form action="/admin/api/clear_candidates" method="POST" style="margin:0;">
+                    <button type="submit" style="background: #b91c1c; padding: 5px 10px; font-size: 0.8rem;">Clear All Candidates</button>
+                </form>
+                {% endif %}
+            </div>
+            {% if status == 'Draft' %}
+            <form action="/admin/api/add_candidate" method="POST" style="background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                <div style="display:flex; gap: 10px;">
+                    <input type="text" name="name" placeholder="Candidate Name" required style="margin:0;">
+                    <input type="text" name="party" placeholder="Party Affiliation" style="margin:0;">
+                </div>
+                <textarea name="bio" placeholder="Statement / Biography" style="margin: 10px 0 0 0;" rows="2"></textarea>
+                <button type="submit" style="margin-top: 10px;">Register Candidate</button>
+            </form>
+            {% endif %}
+            
+            <table>
+                <tr><th>Candidate Name</th><th>Party Affiliation</th><th>Biography</th>{% if status == 'Draft' %}<th>Action</th>{% endif %}</tr>
+                {% for cand in candidates %}
+                <tr>
+                    <td><strong>{{ cand.name }}</strong></td>
+                    <td>{{ cand.party }}</td>
+                    <td style="font-size: 0.85rem;">{{ cand.bio }}</td>
+                    {% if status == 'Draft' %}
+                    <td style="text-align:center;">
+                        <form action="/admin/api/delete_candidate/{{ cand.id }}" method="POST" style="margin:0;">
+                            <button type="submit" style="background: transparent; color: #b91c1c; padding: 0; font-size: 1.2rem;" title="Delete Candidate">🗑️</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <div class="official-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Electoral Roll (Voter Registry)</span>
+                {% if status == 'Draft' and voters|length > 0 %}
+                <form action="/admin/api/clear_voters" method="POST" style="margin:0;">
+                    <button type="submit" style="background: #b91c1c; padding: 5px 10px; font-size: 0.8rem;">Clear All Voters</button>
+                </form>
+                {% endif %}
+            </div>
+            {% if status == 'Draft' %}
+            <form action="/admin/api/add_voter" method="POST" style="background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                <input type="text" name="name" placeholder="Voter Name" required style="margin:0;">
+                <input type="email" name="email" placeholder="Voter Email" required style="margin:0;">
+                <button type="submit" style="margin:0; white-space:nowrap;">Enroll Voter</button>
+            </form>
+            {% endif %}
+            
+            <table>
+                <tr><th>Elector Name</th><th>Registered Email</th><th>Auth PIN</th><th>Polling Status</th>{% if status == 'Draft' %}<th>Action</th>{% endif %}</tr>
+                {% for v in voters %}
+                <tr>
+                    <td>{{ v.name }}</td>
+                    <td>{{ v.email }}</td>
+                    <td style="font-family: monospace; font-weight: bold; font-size:1.1rem;">{{ v.pin }}</td>
+                    <td>
+                        {% if v.has_voted %}<strong style="color:#15803d;">VOTED</strong>{% else %}<span style="color:#d97706;">PENDING</span>{% endif %}
+                    </td>
+                    {% if status == 'Draft' %}
+                    <td style="text-align:center;">
+                        <form action="/admin/api/delete_voter/{{ v.id }}" method="POST" style="margin:0;">
+                            <button type="submit" style="background: transparent; color: #b91c1c; padding: 0; font-size: 1.2rem;" title="Delete Voter">🗑️</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    
+    <div style="flex: 1;">
+        <div class="official-box">
+            <div class="box-header">Election Controls</div>
+            {% if status == 'Draft' %}
+                <p style="font-size: 0.95rem; color: #475569; margin-bottom:15px; line-height:1.5;">Review the electoral roll and candidates. Once launched, no further additions can be made.</p>
+                <form action="/admin/api/launch" method="POST">
+                    <button type="submit" style="width: 100%; background: #15803d; padding: 15px; font-size: 1rem;">Issue Election Notification</button>
+                </form>
+            {% elif status == 'Active' %}
+                <p style="font-size: 0.95rem; color: #15803d; font-weight:bold; margin-bottom:15px;">Polling is currently underway.</p>
+                <form action="/admin/api/close" method="POST">
+                    <button type="submit" style="width: 100%; background: #b91c1c; padding: 15px; font-size: 1rem;">Conclude Polling & Finalize</button>
+                </form>
+            {% elif status == 'Closed' %}
+                <p style="font-size: 0.95rem; color: #b91c1c; font-weight:bold; margin-bottom:15px;">Polling is concluded. Results are declared.</p>
+                <form action="/admin/api/reset" method="POST">
+                    <button type="submit" style="width: 100%; background: #4b5563; padding: 15px; font-size: 1rem;">Reset Election System</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if tally|length > 0 and turnout > 0 %}
+<script>
+    const ctx = document.getElementById('resultsChart').getContext('2d');
+    const labels = [{% for item in tally %}'{{ item.name|replace("'", "\'") }}',{% endfor %}];
+    const data = [{% for item in tally %}{{ item.count }},{% endfor %}];
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Valid Votes Polled',
+                data: data,
+                backgroundColor: '#ff9933',
+                borderColor: '#d97706',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: { 
+                    labels: { font: { size: 14, family: "'Roboto', sans-serif" } }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
