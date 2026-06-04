@@ -6,171 +6,209 @@
     <title>National Election Commission Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
         
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #ffffff;
-            color: #333333;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #FFFFFF;
+            color: #231F20; /* Attractive Black */
             margin: 0;
             padding: 0;
-            border-top: 5px solid #ff9933;
+            border-top: 5px solid #F58220; /* Orange Passion */
         }
         
+        /* Top Utility Bar */
         .top-bar {
-            background-color: #13294b;
-            color: white;
-            padding: 6px 20px;
-            font-size: 0.85rem;
+            background-color: #F8F9FA;
+            color: #231F20;
+            padding: 5px 25px;
+            font-size: 0.8rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #E0E0E0;
         }
 
         .top-bar a {
-            color: #ffffff;
+            color: #0056b3;
             text-decoration: none;
             margin-left: 15px;
             font-weight: 500;
         }
-        .top-bar a:hover { text-decoration: underline; }
+        .top-bar a:hover { 
+            text-decoration: underline;
+            color: #003d82;
+        }
         
+        /* Main Header Logo Section */
         .masthead {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 25px;
-            border-bottom: 2px solid #13294b;
-            background: #ffffff;
+            padding: 15px 25px;
+            background: #FFFFFF;
         }
         
         .emblem {
-            font-size: 4rem;
-            margin-right: 20px;
-            color: #13294b;
+            height: 80px;
+            margin-right: 15px;
         }
         
         .commission-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: #13294b;
+            color: #1a1a1a;
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         .commission-subtitle {
             font-size: 0.95rem;
             color: #555555;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 5px;
+            font-weight: 400;
+            margin-top: 2px;
         }
         
+        /* Orange Navigation / Marquee Bar */
         .marquee-container {
-            background: #fdf6e3;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 5px 0;
-            color: #d97706;
+            background: #F58220; /* Orange Passion */
+            color: #FFFFFF;
             font-weight: 500;
             font-size: 0.9rem;
             display: flex;
+            align-items: stretch;
+            height: 40px;
         }
+        
         .marquee-label {
-            background: #d97706;
+            background: #d46b17; /* Darker orange for the label */
             color: white;
-            padding: 0 15px;
-            font-weight: bold;
+            padding: 0 20px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             white-space: nowrap;
+            text-transform: uppercase;
         }
         
         .container {
-            max-width: 1100px;
+            max-width: 1140px;
             margin: 30px auto;
-            padding: 0 20px;
+            padding: 0 15px;
         }
         
+        /* Clean Box Design */
         .official-box {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            background: #FFFFFF;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .official-box:hover {
-            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .box-header {
-            font-family: 'Playfair Display', serif;
             font-size: 1.4rem;
-            color: #13294b;
-            border-bottom: 2px solid #13294b;
-            padding-bottom: 8px;
-            margin-bottom: 20px;
-            font-weight: 600;
+            color: #231F20;
+            border-bottom: 2px solid #F58220; /* Orange Passion accent */
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-weight: 700;
         }
         
+        /* Form Inputs */
         input[type="text"], input[type="password"], input[type="email"], select, textarea {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px 0;
-            border: 1px solid #9ca3af;
-            border-radius: 2px;
+            padding: 10px 12px;
+            margin: 5px 0 15px 0;
+            border: 1px solid #CCCCCC;
+            border-radius: 3px;
             box-sizing: border-box;
             font-family: 'Roboto', sans-serif;
-            background: #f9fafb;
+            background: #FFFFFF;
+            color: #231F20;
+            font-size: 0.95rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
         
+        input:focus, select:focus, textarea:focus {
+            outline: 0;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        
+        /* Buttons */
         button {
-            background: #13294b;
+            background: #0056b3; /* Primary Blue action */
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 3px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 6px rgba(19, 41, 75, 0.2);
+            transition: background-color 0.15s ease-in-out;
+            font-size: 0.95rem;
+            display: inline-block;
         }
         
-        button:hover { background: #0f223d; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(19, 41, 75, 0.3); }
+        button:hover { 
+            background: #004494; 
+        }
         
+        /* Data Tables */
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 0.95rem;
+            background: #FFFFFF;
         }
         th, td {
-            border: 1px solid #d1d5db;
-            padding: 12px 15px;
+            border: 1px solid #DEE2E6;
+            padding: 12px;
             text-align: left;
+            vertical-align: top;
         }
         th {
-            background-color: #f3f4f6;
-            color: #13294b;
-            font-weight: 600;
+            background-color: #F8F9FA;
+            color: #495057;
+            font-weight: 700;
+            border-bottom: 2px solid #DEE2E6;
+        }
+        tr:nth-child(even) {
+            background-color: #F8F9FA;
         }
         
+        /* Alerts */
         .alert {
-            padding: 12px 15px;
+            padding: 12px 20px;
             margin-bottom: 20px;
             border: 1px solid transparent;
-            border-radius: 2px;
-            font-weight: 500;
+            border-radius: 4px;
+            font-weight: 400;
         }
-        .alert-danger { color: #b91c1c; background-color: #fef2f2; border-color: #fecaca; }
-        .alert-success { color: #15803d; background-color: #f0fdf4; border-color: #bbf7d0; }
+        .alert-danger { 
+            color: #721c24; 
+            background-color: #f8d7da; 
+            border-color: #f5c6cb; 
+        }
+        .alert-success { 
+            color: #155724; 
+            background-color: #d4edda; 
+            border-color: #c3e6cb; 
+        }
+        
+        /* Links inside boxes */
+        .official-box a {
+            color: #0056b3;
+            transition: color 0.15s;
+        }
+        .official-box a:hover {
+            color: #003d82;
+            text-decoration: underline;
+        }
+
+        /* Helpers */
+        .text-muted { color: #6c757d !important; }
     </style>
 </head>
 <body>
