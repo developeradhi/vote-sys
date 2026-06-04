@@ -12,10 +12,13 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_fallback')
 
 # Live Database configuration
-# Uses DATABASE_URL from environment if available, otherwise defaults to local SQLite in /tmp
+# Uses DATABASE_URL from environment if available
 database_url = os.environ.get('DATABASE_URL')
 if not database_url:
-    database_url = 'sqlite:////tmp/live_election.db'
+    if os.environ.get('VERCEL'):
+        database_url = 'sqlite:////tmp/live_election.db'
+    else:
+        database_url = 'sqlite:///live_election.db'
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql+pg8000://", 1)
 elif database_url.startswith("postgresql://"):
