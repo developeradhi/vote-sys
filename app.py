@@ -12,8 +12,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_fallback')
 
 # Live Database configuration
-# Uses DATABASE_URL from environment if available, otherwise defaults to local SQLite.
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///live_election.db')
+# Uses DATABASE_URL from environment if available, otherwise defaults to local SQLite in /tmp
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    database_url = 'sqlite:////tmp/live_election.db'
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql+pg8000://", 1)
 elif database_url.startswith("postgresql://"):
@@ -68,15 +70,21 @@ def set_setting(key, value):
         db.session.add(new_setting)
     db.session.commit()
 
-with app.app_context():
-    db.create_all()
-    # Initialize basic settings if they don't exist
-    if not ElectionSettings.query.filter_by(key='status').first():
-        set_setting('status', 'Draft')
-        set_setting('title', 'Official Government Election 2026')
-        set_setting('description', 'Please cast your vote carefully. This ballot is securely encrypted.')
-        set_setting('choice_rule', 'Single Choice')
-        set_setting('logo', '🏛️')
+db_initialized = False
+
+@app.before_request
+def initialize_db():
+    global db_initialized
+    if not db_initialized:
+        db.create_all()
+        # Initialize basic settings if they don't exist
+        if not ElectionSettings.query.filter_by(key='status').first():
+            set_setting('status', 'Draft')
+            set_setting('title', 'Official Government Election 2026')
+            set_setting('description', 'Please cast your vote carefully. This ballot is securely encrypted.')
+            set_setting('choice_rule', 'Single Choice')
+            set_setting('logo', '🏛️')
+        db_initialized = True
 
 def generate_pin():
     chars = string.ascii_uppercase + string.digits
