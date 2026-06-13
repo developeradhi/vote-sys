@@ -106,12 +106,8 @@ def send_pin_email(voter_email, voter_name, pin):
     mail_username = os.environ.get('MAIL_USERNAME')
     mail_password = os.environ.get('MAIL_PASSWORD')
     
-    if not mail_username or not mail_password:
-        print(f"WARNING: Email credentials missing. PIN for {voter_email} is {pin}")
-        return False
-        
     msg = MIMEMultipart()
-    msg['From'] = f"Election Commission <{mail_username}>"
+    msg['From'] = f"Election Commission <{mail_username or 'noreply@election.gov'}>"
     msg['To'] = voter_email
     msg['Subject'] = "CONFIDENTIAL: Your Official Voter Authorization PIN"
     
@@ -128,6 +124,15 @@ def send_pin_email(voter_email, voter_name, pin):
     Election Commission
     """
     msg.attach(MIMEText(body, 'plain'))
+    
+    if not mail_username or not mail_password:
+        print(f"WARNING: Email credentials missing. Saving email locally for {voter_email}")
+        if not os.path.exists('temp_emails'):
+            os.makedirs('temp_emails')
+        filename = f"temp_emails/email_to_{voter_email.replace('@', '_at_')}.txt"
+        with open(filename, 'w') as f:
+            f.write(msg.as_string())
+        return False
     
     try:
         server = smtplib.SMTP(mail_server, mail_port)
