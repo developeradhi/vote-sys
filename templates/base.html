@@ -3,97 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>National Election Commission Portal</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Election Commission of India</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-        
         body {
-            font-family: 'Roboto', Arial, sans-serif;
-            background-color: #FFFFFF;
-            color: #231F20; /* Attractive Black */
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f8;
             margin: 0;
             padding: 0;
-            border-top: 5px solid #F58220; /* Orange Passion */
+            color: #333;
         }
-        
-        /* Top Utility Bar */
-        .top-bar {
-            background-color: #F8F9FA;
-            color: #231F20;
-            padding: 5px 25px;
-            font-size: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #E0E0E0;
-        }
-
-        .top-bar a {
-            color: #0056b3;
-            text-decoration: none;
-            margin-left: 15px;
-            font-weight: 500;
-        }
-        .top-bar a:hover { 
-            text-decoration: underline;
-            color: #003d82;
-        }
-        
-        /* Main Header Logo Section */
-        .masthead {
+        /* Top Header */
+        .top-header {
+            background-color: #ffffff;
             display: flex;
             align-items: center;
-            padding: 15px 25px;
-            background: #FFFFFF;
+            justify-content: center;
+            padding: 15px 20px;
+            border-bottom: 4px solid #f97316; /* Saffron accent */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .emblem {
-            height: 80px;
-            margin-right: 15px;
-        }
-        
-        .commission-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1a1a1a;
+        .top-header h1 {
             margin: 0;
+            font-size: 1.8rem;
+            color: #0f2e5a; /* Official Navy Blue */
             text-transform: uppercase;
-        }
-        
-        .commission-subtitle {
-            font-size: 0.95rem;
-            color: #555555;
-            font-weight: 400;
-            margin-top: 2px;
-        }
-        
-        /* Orange Navigation / Marquee Bar */
-        .marquee-container {
-            background: #F58220; /* Orange Passion */
-            color: #FFFFFF;
-            font-weight: 500;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: stretch;
-            height: 40px;
-        }
-        
-        .marquee-label {
-            background: #d46b17; /* Darker orange for the label */
-            color: white;
-            padding: 0 20px;
             font-weight: 700;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            text-transform: uppercase;
         }
-        
+        .top-header h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        /* Navigation Bar */
+        .navbar {
+            background-color: #0f2e5a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .navbar a:hover {
+            background-color: #f97316;
+        }
+        /* Marquee Updates */
+        .marquee-container {
+            background-color: #e5e7eb;
+            color: #b91c1c;
+            padding: 8px 0;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #d1d5db;
+        }
+        /* Container */
         .container {
-            max-width: 1140px;
+            max-width: 1200px;
             margin: 30px auto;
-            padding: 0 15px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+        /* Flash Messages */
+        .flash {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .flash.success { background: #dcfce7; color: #166534; border: 1px solid #166534; }
+        .flash.danger { background: #fee2e2; color: #991b1b; border: 1px solid #991b1b; }
+        .flash.warning { background: #fef9c3; color: #854d0e; border: 1px solid #854d0e; }
+        
+        /* Footer */
+        .footer {
+            background-color: #0f2e5a;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            font-size: 0.9rem;
+            border-top: 4px solid #15803d; /* Green accent */
         }
         
         /* Clean Box Design */
@@ -105,16 +106,14 @@
             margin-bottom: 30px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        
         .box-header {
             font-size: 1.4rem;
             color: #231F20;
-            border-bottom: 2px solid #F58220; /* Orange Passion accent */
+            border-bottom: 2px solid #f97316; /* Saffron Passion accent */
             padding-bottom: 10px;
             margin-bottom: 25px;
             font-weight: 700;
         }
-        
         /* Form Inputs */
         input[type="text"], input[type="password"], input[type="email"], select, textarea {
             width: 100%;
@@ -127,18 +126,10 @@
             background: #FFFFFF;
             color: #231F20;
             font-size: 0.95rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: 0;
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-        
         /* Buttons */
         button {
-            background: #0056b3; /* Primary Blue action */
+            background: #0f2e5a; /* Primary Blue action */
             color: white;
             border: none;
             padding: 10px 20px;
@@ -149,11 +140,9 @@
             font-size: 0.95rem;
             display: inline-block;
         }
-        
         button:hover { 
-            background: #004494; 
+            background: #f97316; 
         }
-        
         /* Data Tables */
         table {
             width: 100%;
@@ -177,82 +166,49 @@
         tr:nth-child(even) {
             background-color: #F8F9FA;
         }
-        
-        /* Alerts */
-        .alert {
-            padding: 12px 20px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-            font-weight: 400;
-        }
-        .alert-danger { 
-            color: #721c24; 
-            background-color: #f8d7da; 
-            border-color: #f5c6cb; 
-        }
-        .alert-success { 
-            color: #155724; 
-            background-color: #d4edda; 
-            border-color: #c3e6cb; 
-        }
-        
-        /* Links inside boxes */
-        .official-box a {
-            color: #0056b3;
-            transition: color 0.15s;
-        }
-        .official-box a:hover {
-            color: #003d82;
-            text-decoration: underline;
-        }
-
-        /* Helpers */
-        .text-muted { color: #6c757d !important; }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <div>BIET Government</div>
+
+    <div class="top-header">
+        <div style="font-size: 50px; margin-right: 15px;">🏛️</div>
         <div>
-            {% if session.get('admin_logged_in') %}
-                <span>Officer Session Active</span>
-                <a href="/admin/logout">Secure Logout</a>
-            {% elif session.get('voter_email') %}
-                <span>Elector: {{ session.get('voter_name') }}</span>
-                <a href="/voter/login">Abort Session</a>
-            {% else %}
-                <a href="/voter/login">Citizen E-Voting</a>
-                <a href="/admin/login">Officer Access</a>
-            {% endif %}
+            <h2>भारत निर्वाचन आयोग</h2>
+            <h1>Election Commission of India</h1>
         </div>
     </div>
-    
-    <div class="masthead">
-        <div class="emblem">🏛️</div>
-        <div>
-            <div class="commission-title">Election Commission</div>
-            <div class="commission-subtitle">Autonomous Constitutional Authority of BIET</div>
-        </div>
+
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/voter/login">Voter Portal</a>
+        <a href="/admin/login">Admin Login</a>
+        <a href="#">Publications</a>
+        <a href="#">RTI</a>
     </div>
-    
+
     <div class="marquee-container">
-        <div class="marquee-label">LATEST NOTIFICATIONS</div>
-        <marquee style="padding: 5px 15px;" scrollamount="4">
-            ⚠️ Attention Citizens: Voter registration is strictly monitored. • The polling portal is secured with end-to-end cryptography. • Fraudulent voting or impersonation is a federal offense. • For assistance, contact the Chief Electoral Officer.
+        <marquee behavior="scroll" direction="left" scrollamount="6">
+            <strong>LATEST UPDATE:</strong> General Elections 2026 scheduling is underway. All voters are requested to verify their names on the Electoral Roll. 
+            | The e-Voting portal is secured with 256-bit encryption. Do NOT share your Authorization PIN with anyone.
         </marquee>
     </div>
-    
+
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}"><b>NOTICE:</b> {{ message }}</div>
-                {% endfor %}
-            {% endif %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
         {% endwith %}
         
         {% block content %}{% endblock %}
     </div>
+
+    <div class="footer">
+        <p>&copy; 2026 Election Commission of India. All Rights Reserved.</p>
+        <p style="color: #9ca3af; font-size: 0.8rem;">Designed and Developed for Secure Democratic Processes.</p>
+    </div>
+
 </body>
 </html>

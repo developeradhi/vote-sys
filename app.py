@@ -4,6 +4,9 @@ import os
 import time
 import random
 import string
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -92,7 +95,50 @@ def initialize_db():
 def generate_pin():
     chars = string.ascii_uppercase + string.digits
     for c in ['O', '0', 'I', '1']: chars = chars.replace(c, '')
-    return ''.join(random.choice(chars) for _ in range(6))
+    while True:
+        pin = ''.join(random.choice(chars) for _ in range(6))
+        if not Voter.query.filter_by(pin=pin).first():
+            return pin
+
+def send_pin_email(voter_email, voter_name, pin):
+    mail_server = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    mail_port = int(os.environ.get('MAIL_PORT', 587))
+    mail_username = os.environ.get('MAIL_USERNAME')
+    mail_password = os.environ.get('MAIL_PASSWORD')
+    
+    if not mail_username or not mail_password:
+        print(f"WARNING: Email credentials missing. PIN for {voter_email} is {pin}")
+        return False
+        
+    msg = MIMEMultipart()
+    msg['From'] = f"Election Commission <{mail_username}>"
+    msg['To'] = voter_email
+    msg['Subject'] = "CONFIDENTIAL: Your Official Voter Authorization PIN"
+    
+    body = f"""
+    Dear {voter_name},
+    
+    You have been successfully registered on the Official Electoral Roll.
+    
+    Your Secure Authorization PIN is: {pin}
+    
+    Please keep this PIN strictly confidential. You will need it, along with your registered email, to access the Secure Voting Portal.
+    
+    Regards,
+    Election Commission
+    """
+    msg.attach(MIMEText(body, 'plain'))
+    
+    try:
+        server = smtplib.SMTP(mail_server, mail_port)
+        server.starttls()
+        server.login(mail_username, mail_password)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
 
 # ==========================================
 # ROUTES
@@ -144,7 +190,7 @@ def voter_ballot():
         flash("Election is no longer active.", "danger")
         return redirect(url_for('voter_login'))
         
-    voter = Voter.query.get(session['voter_id'])
+    voter = db.session.get(Voter, session['voter_id'])
     if not voter or voter.has_voted:
         session.clear()
         return redirect(url_for('voter_login'))
@@ -161,8 +207,12 @@ def voter_ballot():
             flash("You can only select one candidate.", "danger")
             return redirect(url_for('voter_ballot'))
             
-        # Cast vote secretly
+        # Validate candidate IDs and cast vote secretly
+        valid_ids = {str(c.id) for c in candidates}
         for c_id in selections:
+            if str(c_id) not in valid_ids:
+                flash("Invalid candidate selected.", "danger")
+                return redirect(url_for('voter_ballot'))
             db.session.add(Vote(candidate_id=int(c_id)))
             
         voter.has_voted = True
@@ -221,10 +271,15 @@ def admin_dashboard():
 def api_add_candidate():
     if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash("Candidate name cannot be empty.", "danger")
+        return redirect(url_for('admin_dashboard'))
+        
     db.session.add(Candidate(
-        name=request.form.get('name'), 
-        party=request.form.get('party', 'Independent'), 
-        bio=request.form.get('bio')
+        name=name, 
+        party=request.form.get('party', 'Independent').strip() or 'Independent', 
+        bio=request.form.get('bio', '').strip()
     ))
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
@@ -233,16 +288,28 @@ def api_add_candidate():
 def api_add_voter():
     if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     
-    email = request.form.get('email').lower().strip()
-    if Voter.query.filter_by(email=email).first():
+    email = request.form.get('email', '').lower().strip()
+    name = request.form.get('name', '').strip()
+    
+    if not email or not name:
+        flash("Voter name and email cannot be empty.", "danger")
+    elif Voter.query.filter_by(email=email).first():
         flash("Email already registered.", "danger")
     else:
+        new_pin = generate_pin()
         db.session.add(Voter(
-            name=request.form.get('name'), 
+            name=name, 
             email=email, 
-            pin=generate_pin()
+            pin=new_pin
         ))
         db.session.commit()
+        
+        # Send email
+        if send_pin_email(email, name, new_pin):
+            flash(f"Voter registered and email sent securely.", "success")
+        else:
+            flash(f"Voter registered, but email failed (Check SMTP settings). PIN: {new_pin}", "warning")
+            
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/api/launch', methods=['POST'])
@@ -271,6 +338,7 @@ def api_reset():
 @app.route('/admin/api/delete_candidate/<int:id>', methods=['POST'])
 def api_delete_candidate(id):
     if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    Vote.query.filter_by(candidate_id=id).delete()
     Candidate.query.filter_by(id=id).delete()
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
