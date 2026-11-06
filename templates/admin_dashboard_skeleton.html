@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="dashboard-container">
+    <div style="text-align: center; margin-top: 50px;">
+        <h3>Verifying Secure Session...</h3>
+    </div>
+</div>
+
+<script>
+// Client-side authentication check
+const token = localStorage.getItem('admin_token');
+if (!token) {
+    window.location.href = '/admin/login';
+} else {
+    // Fetch real dashboard
+    fetch('/admin/api/dashboard_content', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) {
+            localStorage.removeItem('admin_token');
+            window.location.href = '/admin/login';
+        } else {
+            return res.text();
+        }
+    })
+    .then(html => {
+        if (html) {
+            document.getElementById('dashboard-container').innerHTML = html;
+            attachFormInterceptors();
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        window.location.href = '/admin/login';
+    });
+}
+
+function loadDashboard() {
+    fetch('/admin/api/dashboard_content', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.text())
+    .then(html => {
+        document.getElementById('dashboard-container').innerHTML = html;
+        attachFormInterceptors();
+    });
+}
+
+// Automatically intercept all forms rendered inside the dashboard
+function attachFormInterceptors() {
+    const forms = document.getElementById('dashboard-container').querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const res = await fetch(form.action, {
+                method: form.method,
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            });
+            if (res.ok) {
+                loadDashboard(); // Reload data
+            } else {
+                alert("Action failed or unauthorized");
+            }
+        });
+    });
+}
+
+function adminLogout() {
+    localStorage.removeItem('admin_token');
+    window.location.href = '/admin/logout';
+}
+</script>
+{% endblock %}

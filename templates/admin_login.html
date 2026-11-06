@@ -6,13 +6,40 @@
         <p style="font-size: 0.9rem; color: #4b5563; margin-bottom: 20px; line-height:1.5;">
             <strong>Warning:</strong> This system is for the exclusive use of authorized Election Commission officers. Unauthorized access is strictly prohibited and punishable by law. All activities are logged.
         </p>
-        <form method="POST">
+        <div id="login-error" style="color: #dc2626; margin-bottom: 10px; display: none;"></div>
+        <form id="admin-login-form">
             <label><strong>Officer ID / Username</strong></label>
-            <input type="text" name="username" required>
+            <input type="text" id="username" required>
             <label><strong>Secure Password</strong></label>
-            <input type="password" name="password" required>
+            <input type="password" id="password" required>
             <button type="submit" style="width: 100%; margin-top: 10px;">Authenticate & Enter Dashboard</button>
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorDiv = document.getElementById('login-error');
+    errorDiv.style.display = 'none';
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    const res = await fetch('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    
+    if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('admin_token', data.token);
+        window.location.href = '/admin/dashboard';
+    } else {
+        errorDiv.innerText = "Invalid credentials or rate limit exceeded.";
+        errorDiv.style.display = 'block';
+    }
+});
+</script>
 {% endblock %}

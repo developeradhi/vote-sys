@@ -1,5 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import jwt
+from functools import wraps
+import re
 import os
 import time
 import random
@@ -13,6 +18,37 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key_fallback')
+
+admin_password_check = os.environ.get('ADMIN_PASSWORD', 'admin123')
+if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', admin_password_check):
+    print("CRITICAL SECURITY WARNING: ADMIN_PASSWORD must be at least 8 characters, and contain a letter, a number, and a special character.")
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+        if not token:
+            return jsonify({'message': 'Token is missing or invalid'}), 401
+        try:
+            data = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+            if not data.get('admin'):
+                raise Exception()
+        except Exception as e:
+            return jsonify({'message': 'Token is invalid'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
 
 # Live Database configuration
 # Uses DATABASE_URL from environment if available
@@ -163,6 +199,7 @@ def index():
     return render_template('public_dashboard.html', candidates=candidates, status=status, tally=tally)
 
 @app.route('/voter/login', methods=['GET', 'POST'])
+@limiter.limit('5 per minute')
 def voter_login():
     if request.method == 'POST':
         email = request.form.get('email', '').lower().strip()
@@ -235,20 +272,31 @@ def voter_ballot():
                            voter_name=session['voter_name'])
 
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit('5 per minute')
 def admin_login():
     if request.method == 'POST':
-        admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
-        if request.form.get('username') == admin_username and request.form.get('password') == admin_password:
-            session['admin_logged_in'] = True
-            return redirect(url_for('admin_dashboard'))
-        flash("Invalid Global Admin credentials.", "danger")
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+            
+            admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+            admin_password = os.environ.get('ADMIN_PASSWORD', 'Admin@123!')
+            
+            if username == admin_username and password == admin_password:
+                token = jwt.encode({'admin': True, 'exp': time.time() + 3600}, app.secret_key, algorithm="HS256")
+                return jsonify({'token': token}), 200
+            return jsonify({'message': 'Invalid Global Admin credentials.'}), 401
+        return jsonify({'message': 'JSON format required'}), 400
     return render_template('admin_login.html')
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    if not session.get('admin_logged_in'): return redirect(url_for('admin_login'))
-    
+    return render_template('admin_dashboard_skeleton.html')
+
+@app.route('/admin/api/dashboard_content', methods=['GET'])
+@token_required
+def api_dashboard_content():
     candidates = Candidate.query.all()
     voters = Voter.query.all()
     status = get_setting('status', 'Draft')
@@ -257,7 +305,6 @@ def admin_dashboard():
     total = len(voters)
     pct = int((turnout / total) * 100) if total > 0 else 0
     
-    # Calculate Results for Live Charting
     tally = []
     for c in candidates:
         votes_for_c = Vote.query.filter_by(candidate_id=c.id).count()
@@ -273,13 +320,14 @@ def admin_dashboard():
                            tally=tally)
 
 @app.route('/admin/api/add_candidate', methods=['POST'])
+@token_required
 def api_add_candidate():
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     
     name = request.form.get('name', '').strip()
     if not name:
         flash("Candidate name cannot be empty.", "danger")
-        return redirect(url_for('admin_dashboard'))
+        return jsonify({'status': 'ok'}), 200
         
     db.session.add(Candidate(
         name=name, 
@@ -287,11 +335,12 @@ def api_add_candidate():
         bio=request.form.get('bio', '').strip()
     ))
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/add_voter', methods=['POST'])
+@token_required
 def api_add_voter():
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     
     email = request.form.get('email', '').lower().strip()
     name = request.form.get('name', '').strip()
@@ -315,60 +364,67 @@ def api_add_voter():
         else:
             flash(f"Voter registered, but email failed (Check SMTP settings). PIN: {new_pin}", "warning")
             
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/launch', methods=['POST'])
+@token_required
 def api_launch():
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     set_setting('status', 'Active')
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/close', methods=['POST'])
+@token_required
 def api_close():
-    if not session.get('admin_logged_in'): return "Unauthorized", 401
+    if False: return "Unauthorized", 401
     set_setting('status', 'Closed')
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/reset', methods=['POST'])
+@token_required
 def api_reset():
-    if not session.get('admin_logged_in'): return "Unauthorized", 401
+    if False: return "Unauthorized", 401
     Vote.query.delete()
     for v in Voter.query.all():
         v.has_voted = False
         v.pin = generate_pin()
     set_setting('status', 'Draft')
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/delete_candidate/<int:id>', methods=['POST'])
+@token_required
 def api_delete_candidate(id):
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     Vote.query.filter_by(candidate_id=id).delete()
     Candidate.query.filter_by(id=id).delete()
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/delete_voter/<int:id>', methods=['POST'])
+@token_required
 def api_delete_voter(id):
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     Voter.query.filter_by(id=id).delete()
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/clear_candidates', methods=['POST'])
+@token_required
 def api_clear_candidates():
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     Vote.query.delete()
     Candidate.query.delete()
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/api/clear_voters', methods=['POST'])
+@token_required
 def api_clear_voters():
-    if not session.get('admin_logged_in') or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
+    if False or get_setting('status', 'Draft') != 'Draft': return "Unauthorized/Sealed", 401
     Voter.query.delete()
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/admin/logout')
 def admin_logout():
